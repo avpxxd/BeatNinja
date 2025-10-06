@@ -20,6 +20,14 @@
         const restartFromPauseButton = document.getElementById('restartFromPauseButton');
         const backgroundMusic = document.getElementById('backgroundMusic'); // Music element
 
+        // Music playlist.
+        const musicPlaylist = [
+            "https://www.bensound.com/bensound-music/bensound-onrepeat.mp3",
+            "https://www.bensound.com/bensound-music/bensound-bymyside.mp3",
+            "https://www.bensound.com/bensound-music/bensound-littleidea.mp3",
+            "https://www.bensound.com/bensound-music/bensound-allthat.mp3"
+        ];
+
         let score = 0, highScore = localStorage.getItem('sliceFusionHighScore') || 0;
         let lives = 3, maxLives = 4, startingLives = 3;
         let gameState = 'menu';
