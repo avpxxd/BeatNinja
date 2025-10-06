@@ -18,9 +18,9 @@
         const pauseMenu = document.getElementById('pauseMenu');
         const resumeButton = document.getElementById('resumeButton');
         const restartFromPauseButton = document.getElementById('restartFromPauseButton');
-        const backgroundMusic = document.getElementById('backgroundMusic'); // Music element
-
-        // Music playlist.
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        
+        // **NEW: Music playlist. Add your audio file paths here!**
         const musicPlaylist = [
             "https://www.bensound.com/bensound-music/bensound-onrepeat.mp3",
             "https://www.bensound.com/bensound-music/bensound-bymyside.mp3",
@@ -120,6 +120,10 @@
             pauseMenu.classList.add('hidden');
             pauseMenu.classList.remove('flex');
             hud.classList.remove('hidden'); 
+            
+            // **UPDATED: Select and play a random song**
+            const randomSong = musicPlaylist[Math.floor(Math.random() * musicPlaylist.length)];
+            backgroundMusic.src = randomSong;
             backgroundMusic.currentTime = 0;
             backgroundMusic.play().catch(error => console.log("User needs to interact with the document first to play audio."));
         }
