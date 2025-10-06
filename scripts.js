@@ -25,7 +25,7 @@
         const musicPlaylist = [
             "https://www.bensound.com/bensound-music/bensound-onrepeat.mp3",
             "https://www.bensound.com/bensound-music/bensound-bymyside.mp3",
-            "https://www.bensound.com/bensound-music/bensound-littleidea.mp3",
+            "https://www.bensound.com/bensound-music/bensound-dreams.mp3",
             "https://www.bensound.com/bensound-music/bensound-allthat.mp3"
         ];
 
