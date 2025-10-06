@@ -19,11 +19,12 @@
         const resumeButton = document.getElementById('resumeButton');
         const restartFromPauseButton = document.getElementById('restartFromPauseButton');
         const backgroundMusic = document.getElementById('backgroundMusic');
+        const volumeSlider = document.getElementById('volumeSlider');
         
         const musicPlaylist = [
             "https://www.bensound.com/bensound-music/bensound-onrepeat.mp3",
             "https://www.bensound.com/bensound-music/bensound-bymyside.mp3",
-            "https://www.bensound.com/bensound-music/bensound-littleidea.mp3",
+            "https://www.bensound.com/bensound-music/bensound-dreams.mp3",
             "https://www.bensound.com/bensound-music/bensound-allthat.mp3"
         ];
 
@@ -43,7 +44,7 @@
         const DIRECTIONS = ['up', 'down', 'left', 'right'];
         const DIRECTION_ANGLES = { up: -Math.PI / 2, down: Math.PI / 2, left: Math.PI, right: 0 };
         const COLORS = ['#ef4444', '#3b82f6'];
-        const EDGE_BUFFER = 60; // **NEW: Buffer for screen edges**
+        const EDGE_BUFFER = 60;
 
         function resizeCanvas() { canvas.width = gameContainer.clientWidth; canvas.height = gameContainer.clientHeight; }
 
@@ -59,18 +60,7 @@
             draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
         }
 
-        function spawnBlock() { 
-            // **UPDATED: Spawning logic with edge buffer**
-            const spawnableWidth = Math.max(0, canvas.width - BLOCK_SIZE - (EDGE_BUFFER * 2));
-            const x = EDGE_BUFFER + Math.random() * spawnableWidth;
-            const y = -BLOCK_SIZE; 
-            const rand = Math.random(); 
-            let type; 
-            if (rand < 0.02) { type = 'heart'; } 
-            else if (rand < 0.10) { type = 'bomb'; } 
-            else { type = 'normal'; } 
-            blocks.push(new Block(x, y, type)); 
-        }
+        function spawnBlock() { const spawnableWidth = Math.max(0, canvas.width - BLOCK_SIZE - (EDGE_BUFFER * 2)); const x = EDGE_BUFFER + Math.random() * spawnableWidth; const y = -BLOCK_SIZE; const rand = Math.random(); let type; if (rand < 0.02) { type = 'heart'; } else if (rand < 0.10) { type = 'bomb'; } else { type = 'normal'; } blocks.push(new Block(x, y, type)); }
         function createParticles(x, y, color) { for (let i = 0; i < 20; i++) particles.push(new Particle(x, y, color)); }
         function triggerScreenShake(magnitude, duration) { shakeMagnitude = magnitude; shakeDuration = duration; shakeStartTime = Date.now(); }
 
@@ -117,6 +107,11 @@
         function handleMoveSwipe(e) { if (isSwiping && gameState === 'playing') { e.preventDefault(); const { x, y } = getEventCoords(e); swipeTrail.push({ x, y }); checkSlice(x, y); } }
         function handleEndSwipe() { isSwiping = false; swipeTrail = []; }
         
+        function setVolume(level) {
+            backgroundMusic.volume = level;
+            localStorage.setItem('beatNinjaVolume', level);
+        }
+
         function startGame() { 
             score = 0; lives = startingLives; blocks = []; particles = []; 
             multiplier = 1; comboCounter = 0;
@@ -170,6 +165,7 @@
             backgroundMusic.play().catch(error => console.log("Audio play failed on resume:", error));
         }
 
+        // Initial setup
         window.addEventListener('resize', resizeCanvas);
         startButton.addEventListener('click', startGame);
         restartButton.addEventListener('click', startGame);
@@ -177,6 +173,20 @@
         resumeButton.addEventListener('click', resumeGame);
         restartFromPauseButton.addEventListener('click', startGame);
         
+        volumeSlider.addEventListener('input', (e) => {
+            setVolume(e.target.value / 100);
+        });
+
+        // Load saved volume or set a default
+        const savedVolume = localStorage.getItem('beatNinjaVolume');
+        if (savedVolume !== null) {
+            volumeSlider.value = savedVolume * 100;
+            setVolume(savedVolume);
+        } else {
+            volumeSlider.value = 50; // Default 50%
+            setVolume(0.5);
+        }
+
         canvas.addEventListener('mousedown', handleStartSwipe); canvas.addEventListener('mousemove', handleMoveSwipe); canvas.addEventListener('mouseup', handleEndSwipe); canvas.addEventListener('mouseleave', handleEndSwipe);
         canvas.addEventListener('touchstart', handleStartSwipe, { passive: false }); canvas.addEventListener('touchmove', handleMoveSwipe, { passive: false }); canvas.addEventListener('touchend', handleEndSwipe); canvas.addEventListener('touchcancel', handleEndSwipe);
         
