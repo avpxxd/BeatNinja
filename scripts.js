@@ -20,11 +20,12 @@
         const restartFromPauseButton = document.getElementById('restartFromPauseButton');
         const backgroundMusic = document.getElementById('backgroundMusic');
         const volumeSlider = document.getElementById('volumeSlider');
+        const autoSliceSwitch = document.getElementById('autoSliceSwitch');
         
         const musicPlaylist = [
             "https://www.bensound.com/bensound-music/bensound-onrepeat.mp3",
             "https://www.bensound.com/bensound-music/bensound-bymyside.mp3",
-            "https://www.bensound.com/bensound-music/bensound-dreams.mp3",
+            "https://www.bensound.com/bensound-music/bensound-littleidea.mp3",
             "https://www.bensound.com/bensound-music/bensound-allthat.mp3"
         ];
 
@@ -39,6 +40,7 @@
         let shakeDuration = 0, shakeMagnitude = 0, shakeStartTime = 0;
         let isSwiping = false, lastSpawnTime = 0, spawnInterval = 1500, baseSpeed = 2;
         let pausedTime = 0;
+        let isAutoSliceEnabled = false;
 
         const BLOCK_SIZE = 80;
         const DIRECTIONS = ['up', 'down', 'left', 'right'];
@@ -103,9 +105,20 @@
         }
         
         function getEventCoords(e) { let x, y; if (e.touches && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY; } else { x = e.clientX; y = e.clientY; } return { x, y }; }
-        function handleStartSwipe(e) { if (gameState !== 'playing') return; isSwiping = true; swipeTrail = [getEventCoords(e)]; }
-        function handleMoveSwipe(e) { if (isSwiping && gameState === 'playing') { e.preventDefault(); const { x, y } = getEventCoords(e); swipeTrail.push({ x, y }); checkSlice(x, y); } }
-        function handleEndSwipe() { isSwiping = false; swipeTrail = []; }
+        
+        function handleStartSwipe(e) { if (gameState !== 'playing' || isAutoSliceEnabled) return; isSwiping = true; swipeTrail = [getEventCoords(e)]; }
+        
+        function handleMoveSwipe(e) {
+            if (gameState !== 'playing') return;
+            if (isAutoSliceEnabled || isSwiping) {
+                e.preventDefault();
+                const { x, y } = getEventCoords(e);
+                swipeTrail.push({ x, y });
+                checkSlice(x, y);
+            }
+        }
+        
+        function handleEndSwipe(e) { if (gameState !== 'playing' || isAutoSliceEnabled) return; isSwiping = false; swipeTrail = []; }
         
         function setVolume(level) {
             backgroundMusic.volume = level;
@@ -121,6 +134,8 @@
             baseSpeed = canvas.height / 400; spawnInterval = 1500; 
             lastSpawnTime = Date.now(); 
             gameState = 'playing'; 
+            isSwiping = isAutoSliceEnabled;
+            swipeTrail = [];
             startMenu.classList.add('hidden'); 
             gameOverMenu.classList.add('hidden');
             pauseMenu.classList.add('hidden');
@@ -148,6 +163,7 @@
             if (gameState !== 'playing') return;
             pausedTime = Date.now();
             gameState = 'paused';
+            swipeTrail = [];
             hud.classList.add('hidden');
             pauseMenu.classList.remove('hidden');
             pauseMenu.classList.add('flex');
@@ -159,6 +175,8 @@
             const elapsed = Date.now() - pausedTime;
             lastSpawnTime += elapsed;
             gameState = 'playing';
+            isSwiping = isAutoSliceEnabled;
+            swipeTrail = [];
             hud.classList.remove('hidden');
             pauseMenu.classList.add('hidden');
             pauseMenu.classList.remove('flex');
@@ -177,6 +195,12 @@
             setVolume(e.target.value / 100);
         });
 
+        autoSliceSwitch.addEventListener('change', (e) => {
+            isAutoSliceEnabled = e.target.checked;
+            isSwiping = isAutoSliceEnabled;
+            swipeTrail = [];
+        });
+
         // Load saved volume or set a default
         const savedVolume = localStorage.getItem('beatNinjaVolume');
         if (savedVolume !== null) {
@@ -187,7 +211,9 @@
             setVolume(0.5);
         }
 
-        canvas.addEventListener('mousedown', handleStartSwipe); canvas.addEventListener('mousemove', handleMoveSwipe); canvas.addEventListener('mouseup', handleEndSwipe); canvas.addEventListener('mouseleave', handleEndSwipe);
+        canvas.addEventListener('mousedown', handleStartSwipe); canvas.addEventListener('mousemove', handleMoveSwipe); canvas.addEventListener('mouseup', handleEndSwipe);
+        // Clear trail if mouse leaves canvas to prevent ugly lines
+        canvas.addEventListener('mouseleave', () => { if (isAutoSliceEnabled) { swipeTrail = []; } else { handleEndSwipe(); }});
         canvas.addEventListener('touchstart', handleStartSwipe, { passive: false }); canvas.addEventListener('touchmove', handleMoveSwipe, { passive: false }); canvas.addEventListener('touchend', handleEndSwipe); canvas.addEventListener('touchcancel', handleEndSwipe);
         
         resizeCanvas();
